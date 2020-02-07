@@ -1,0 +1,45 @@
+foundation:
+  version: 2.7
+  name: 
+  iaas: &foundation_iaas azure
+  opsman_url: 
+  docker_registry: 
+  smtp_host: 
+
+pivnet:
+  api_token: 
+
+product_version:
+  splunk: '^1\.1\..*$'
+  spring: '^3\.1\..*$'
+  rabbitmq: '^1\.18\..*$'
+  sso: '^1\.11\..*$'
+  harbor: '^1\.10\..*$'
+  metrics: '^1\.6\..*$'
+  pas: '^2\.7\..*$'
+  pasw: '^2\.7\..*$'
+  healthwatch: '^1\.8\..*$'
+  p-redis: '^2\.3\..*$'
+  pcc: '^1\.10\..*$'
+  mysql: '^2\.7\..*$'
+  azuresb: '^1\.11\..*$'
+  credhub: '^1\.4\..*$'
+
+secrets:
+  concourse:
+    git_username: 
+    git_password: 
+    git_ssh_pubkey: 
+    git_ssh_prvkey: |
+      -----BEGIN RSA PRIVATE KEY-----
+      -----END RSA PRIVATE KEY-----
+  opsman:
+    client_id: 
+    client_secret: 
+
+
+
+pipelines:
+  pcf_patch: https://github.com/theautoroboto/pcf-patch.git
+  email-from: 
+  email-to: 

@@ -1,0 +1,465 @@
+resources:
+- name: next
+  type: time
+  source:
+    interval: 60s
+
+- name: pipeline_repo
+  type: git
+  source:
+    uri: ((pipelines.pcf_patch))
+    # private_key: ((secrets.concourse.git_ssh_prvkey))
+    username: ((secrets.concourse.git_username))
+    password: ((secrets.concourse.git_password))
+    skip_ssl_verification: true
+
+- name: pipeline_image
+  type: docker-image
+  source:
+    repository: ((foundation.docker_registry))/pcf-admins/clitools
+
+- name: check-schedule
+  type: time
+  source:
+    start: 3:00 PM
+    stop: 10:00 PM
+    location: America/New_York
+    interval: 24h
+
+- name: apply-schedule
+  type: time
+  source:
+    start: 10:30 PM
+    stop: 11:30 PM
+    location: America/New_York
+    interval: 24h
+
+- name: send-an-email
+  type: email
+  source:
+    smtp:
+      host: ((foundation.smtp_host))
+      port: "25"
+      skip_ssl_validation: true
+      anonymous: true
+    from: ((pipelines.email-from))
+    to: [ ((pipelines.email-to)) ]
+
+resource_types:
+- name: email
+  type: docker-image
+  source:
+    repository: ((foundation.docker_registry))/pcf-admins/email-resource
+    tag: latest
+
+jobs:
+- name: update-harbor
+  plan:
+  - get: check-schedule
+    trigger: true
+  - get: pipeline_repo
+  - get: pipeline_image
+  - task: update
+    image: pipeline_image
+    file: pipeline_repo/tasks/updates.yml
+    params:
+      PRODUCT_SLUG: "harbor-container-registry"
+      OPSMAN_DOMAIN_OR_IP_ADDRESS: ((foundation.opsman_url))
+      OPSMAN_CLIENT_ID: ((secrets.opsman.client_id))
+      OPSMAN_PASSWORD: ((secrets.opsman.client_secret))
+      ENV: ((foundation.name))
+      PRODUCT_VERSION: ((product_version.harbor))
+      PIVNET_TOKEN: ((pivnet.api_token))
+
+- name: update-sso
+  plan:
+  - get: check-schedule
+    trigger: true
+  - get: pipeline_repo
+  - get: pipeline_image
+  - task: update
+    image: pipeline_image
+    file: pipeline_repo/tasks/updates.yml
+    params:
+      PRODUCT_SLUG: "Pivotal_Single_Sign-On_Service"
+      OPSMAN_DOMAIN_OR_IP_ADDRESS: ((foundation.opsman_url))
+      OPSMAN_CLIENT_ID: ((secrets.opsman.client_id))
+      OPSMAN_PASSWORD: ((secrets.opsman.client_secret))
+      ENV: ((foundation.name))
+      PRODUCT_VERSION: ((product_version.sso))
+      PIVNET_TOKEN: ((pivnet.api_token))
+
+- name: update-rabbitmq
+  plan:
+  - get: check-schedule
+    trigger: true
+  - get: pipeline_repo
+  - get: pipeline_image
+  - task: update
+    image: pipeline_image
+    file: pipeline_repo/tasks/updates.yml
+    params:
+      PRODUCT_SLUG: "p-rabbitmq"
+      OPSMAN_DOMAIN_OR_IP_ADDRESS: ((foundation.opsman_url))
+      OPSMAN_CLIENT_ID: ((secrets.opsman.client_id))
+      OPSMAN_PASSWORD: ((secrets.opsman.client_secret))
+      ENV: ((foundation.name))
+      PRODUCT_VERSION: ((product_version.rabbitmq))
+      PIVNET_TOKEN: ((pivnet.api_token))
+
+- name: update-splunk
+  plan:
+  - get: check-schedule
+    trigger: true
+  - get: pipeline_repo
+  - get: pipeline_image
+  - task: update
+    image: pipeline_image
+    file: pipeline_repo/tasks/updates.yml
+    params:
+      PRODUCT_SLUG: "splunk-nozzle"
+      OPSMAN_DOMAIN_OR_IP_ADDRESS: ((foundation.opsman_url))
+      OPSMAN_CLIENT_ID: ((secrets.opsman.client_id))
+      OPSMAN_PASSWORD: ((secrets.opsman.client_secret))
+      ENV: ((foundation.name))
+      PRODUCT_VERSION: ((product_version.splunk))
+      PIVNET_TOKEN: ((pivnet.api_token))
+
+- name: update-spring
+  plan:
+  - get: check-schedule
+    trigger: true
+  - get: pipeline_repo
+  - get: pipeline_image
+  - task: update
+    image: pipeline_image
+    file: pipeline_repo/tasks/updates.yml
+    params:
+      PRODUCT_SLUG: "p-spring-cloud-services"
+      OPSMAN_DOMAIN_OR_IP_ADDRESS: ((foundation.opsman_url))
+      OPSMAN_CLIENT_ID: ((secrets.opsman.client_id))
+      OPSMAN_PASSWORD: ((secrets.opsman.client_secret))
+      ENV: ((foundation.name))
+      PRODUCT_VERSION: ((product_version.spring))
+      PIVNET_TOKEN: ((pivnet.api_token))
+
+# Too much of a pain right now.  apm vs apmpostgres.  Whats up with that
+- name: update-metrics
+  plan:
+  - get: check-schedule
+    trigger: true
+  - get: pipeline_repo
+  - get: pipeline_image
+  - task: update
+    image: pipeline_image
+    file: pipeline_repo/tasks/updates.yml
+    params:
+      PRODUCT_SLUG: "apm"
+      OPSMAN_DOMAIN_OR_IP_ADDRESS: ((foundation.opsman_url))
+      OPSMAN_CLIENT_ID: ((secrets.opsman.client_id))
+      OPSMAN_PASSWORD: ((secrets.opsman.client_secret))
+      ENV: ((foundation.name))
+      PRODUCT_VERSION: ((product_version.metrics))
+      PIVNET_TOKEN: ((pivnet.api_token))
+
+- name: update-pas
+  plan:
+  - get: check-schedule
+    trigger: true
+  - get: pipeline_repo
+  - get: pipeline_image
+  - task: update
+    image: pipeline_image
+    file: pipeline_repo/tasks/updates.yml
+    params:
+      PRODUCT_SLUG: "cf"
+      OPSMAN_DOMAIN_OR_IP_ADDRESS: ((foundation.opsman_url))
+      OPSMAN_CLIENT_ID: ((secrets.opsman.client_id))
+      OPSMAN_PASSWORD: ((secrets.opsman.client_secret))
+      ENV: ((foundation.name))
+      PRODUCT_VERSION: ((product_version.pas))
+      PIVNET_TOKEN: ((pivnet.api_token))
+
+- name: update-pasw
+  plan:
+  - get: check-schedule
+    trigger: true
+  - get: pipeline_repo
+  - get: pipeline_image
+  - task: update
+    image: pipeline_image
+    file: pipeline_repo/tasks/updates.yml
+    params:
+      PRODUCT_SLUG: "pas-windows"
+      OPSMAN_DOMAIN_OR_IP_ADDRESS: ((foundation.opsman_url))
+      OPSMAN_CLIENT_ID: ((secrets.opsman.client_id))
+      OPSMAN_PASSWORD: ((secrets.opsman.client_secret))
+      ENV: ((foundation.name))
+      PRODUCT_VERSION: ((product_version.pasw))
+      PIVNET_TOKEN: ((pivnet.api_token))
+
+- name: update-healthwatch
+  plan:
+  - get: check-schedule
+    trigger: true
+  - get: pipeline_repo
+  - get: pipeline_image
+  - task: update
+    image: pipeline_image
+    file: pipeline_repo/tasks/updates.yml
+    params:
+      PRODUCT_SLUG: "p-healthwatch"
+      OPSMAN_DOMAIN_OR_IP_ADDRESS: ((foundation.opsman_url))
+      OPSMAN_CLIENT_ID: ((secrets.opsman.client_id))
+      OPSMAN_PASSWORD: ((secrets.opsman.client_secret))
+      ENV: ((foundation.name))
+      PRODUCT_VERSION: ((product_version.healthwatch))
+      PIVNET_TOKEN: ((pivnet.api_token))
+
+- name: update-redis
+  plan:
+  - get: check-schedule
+    trigger: true
+  - get: pipeline_repo
+  - get: pipeline_image
+  - task: update
+    image: pipeline_image
+    file: pipeline_repo/tasks/updates.yml
+    params:
+      PRODUCT_SLUG: "p-redis"
+      OPSMAN_DOMAIN_OR_IP_ADDRESS: ((foundation.opsman_url))
+      OPSMAN_CLIENT_ID: ((secrets.opsman.client_id))
+      OPSMAN_PASSWORD: ((secrets.opsman.client_secret))
+      ENV: ((foundation.name))
+      PRODUCT_VERSION: ((product_version.p-redis))
+      PIVNET_TOKEN: ((pivnet.api_token))
+
+- name: update-cloudcache
+  plan:
+  - get: check-schedule
+    trigger: true
+  - get: pipeline_repo
+  - get: pipeline_image
+  - task: update
+    image: pipeline_image
+    file: pipeline_repo/tasks/updates.yml
+    params:
+      PRODUCT_SLUG: "p-cloudcache"
+      OPSMAN_DOMAIN_OR_IP_ADDRESS: ((foundation.opsman_url))
+      OPSMAN_CLIENT_ID: ((secrets.opsman.client_id))
+      OPSMAN_PASSWORD: ((secrets.opsman.client_secret))
+      ENV: ((foundation.name))
+      PRODUCT_VERSION: ((product_version.pcc))
+      PIVNET_TOKEN: ((pivnet.api_token))
+- name: update-mysql
+  plan:
+  - get: check-schedule
+    trigger: true
+  - get: pipeline_repo
+  - get: pipeline_image
+  - task: update
+    image: pipeline_image
+    file: pipeline_repo/tasks/updates.yml
+    params:
+      PRODUCT_SLUG: "pivotal-mysql"
+      OPSMAN_DOMAIN_OR_IP_ADDRESS: ((foundation.opsman_url))
+      OPSMAN_CLIENT_ID: ((secrets.opsman.client_id))
+      OPSMAN_PASSWORD: ((secrets.opsman.client_secret))
+      ENV: ((foundation.name))
+      PRODUCT_VERSION: ((product_version.mysql))
+      PIVNET_TOKEN: ((pivnet.api_token))
+- name: update-azure_sb
+  plan:
+  - get: check-schedule
+    trigger: true
+  - get: pipeline_repo
+  - get: pipeline_image
+  - task: update
+    image: pipeline_image
+    file: pipeline_repo/tasks/updates.yml
+    params:
+      PRODUCT_SLUG: "azure-service-broker"
+      OPSMAN_DOMAIN_OR_IP_ADDRESS: ((foundation.opsman_url))
+      OPSMAN_CLIENT_ID: ((secrets.opsman.client_id))
+      OPSMAN_PASSWORD: ((secrets.opsman.client_secret))
+      ENV: ((foundation.name))
+      PRODUCT_VERSION: ((product_version.azuresb))
+      PIVNET_TOKEN: ((pivnet.api_token))
+
+- name: update-credhub_sb
+  plan:
+  - get: check-schedule
+    trigger: true
+  - get: pipeline_repo
+  - get: pipeline_image
+  - task: update
+    image: pipeline_image
+    file: pipeline_repo/tasks/updates.yml
+    params:
+      PRODUCT_SLUG: "credhub-service-broker"
+      OPSMAN_DOMAIN_OR_IP_ADDRESS: ((foundation.opsman_url))
+      OPSMAN_CLIENT_ID: ((secrets.opsman.client_id))
+      OPSMAN_PASSWORD: ((secrets.opsman.client_secret))
+      ENV: ((foundation.name))
+      PRODUCT_VERSION: ((product_version.credhub))
+      PIVNET_TOKEN: ((pivnet.api_token))
+- name: get-info
+  plan:
+  - get: pipeline_repo
+  - get: pipeline_image
+  - task: update
+    image: pipeline_image
+    file: pipeline_repo/tasks/updates.yml
+    params:
+      PRODUCT_SLUG: "info"
+
+- name: pending-changes
+  plan:
+  - get: apply-schedule
+    trigger: true
+  - get: pipeline_repo
+  - get: pipeline_image
+  - task: pending-changes    image: pipeline_image
+    params:
+      OPSMAN_DOMAIN_OR_IP_ADDRESS: ((foundation.opsman_url))
+      OPSMAN_CLIENT_ID: ((secrets.opsman.client_id))
+      OPSMAN_PASSWORD: ((secrets.opsman.client_secret))
+      ENV: ((foundation.name))
+    config:
+      platform: linux
+      outputs:
+        - name: email
+      run:
+        path: bash
+        args:
+        - -c
+        - |
+            set -eu
+            export OM_TARGET="https://${OPSMAN_DOMAIN_OR_IP_ADDRESS}"
+            export OM_CLIENT_ID="${OPSMAN_CLIENT_ID}"
+            export OM_CLIENT_SECRET="${OPSMAN_PASSWORD}"
+            echo "Checking dem pending changes on Ops Manager @ ${OPSMAN_DOMAIN_OR_IP_ADDRESS}"
+            local pending_changes_count=$(om -k \
+            curl -path /api/v0/staged/pending_changes | jq -r '.[][] | select(.action | startswith("update","install")) | .guid' | sed -e 's/-[^\-]*$//' | uniq)
+            if [[ $(expr length $pending_changes_count) -eq 0 ]]; then
+                echo "Detected 0 pending changes. No need to apply."
+                exit 1
+            else
+                TIME=$(date +%T)
+                echo "sending email for pending changes"
+
+                cat > email/pendingheaders.txt <<EOH
+                MIME-version: 1.0
+                Content-Type: text/html; charset="UTF-8"
+                EOH
+
+                #Begin the Email Body
+                cat > email/pending.html <<EOH
+                <html>
+                <body>
+                <p>
+                <pre>
+                EOH
+
+                pending_list=$(om -k pending-changes)
+
+                echo "Here they are $pending_list"
+
+                printf "<p> Pending changes were detected in ${ENV}. An apply will be run.<h2><font face=Arial>Pending Installs:</font></h2>$pending_list</body></html>" \
+                >> email/pending.html
+
+                printf "${ENV}-Pending Changes detected"> email/pendingsubject.txt
+                exit 0
+            fi
+    on_success:
+      put: send-an-email
+      params:
+        headers: email/pendingheaders.txt
+        subject: email/pendingsubject.txt
+        body: email/pending.html
+  - put: next
+- name: apply-changes
+  plan:
+  - get: next
+    trigger: true
+    passed:
+    - pending-changes
+  - get: pipeline_repo
+  - get: pipeline_image
+  - task: apply-changes
+    image: pipeline_image
+    params:
+      OPSMAN_DOMAIN_OR_IP_ADDRESS: ((foundation.opsman_url))
+      OPSMAN_CLIENT_ID: ((secrets.opsman.client_id))
+      OPSMAN_PASSWORD: ((secrets.opsman.client_secret))
+      ENV: ((foundation.name))
+    config:
+      platform: linux
+      outputs:
+        - name: email
+      run:
+        path: bash
+        args:
+        - -c
+        - |
+            set -eu
+            POLL_INTERVAL=30
+            function send_dat_email() {
+                status="${1}"
+                echo "Status detected ${status}"
+                TIME=$(date +%T)
+                cat > email/headers.txt <<EOH
+                MIME-version: 1.0
+                Content-Type: text/html; charset="UTF-8"
+                EOH
+
+                #Begin the Email Body
+                cat > email/body.html <<EOH
+                <html>
+                <style>
+                table, th, td {
+                    border: 1px solid black;
+                }
+                </style>
+                <body>
+                <p>
+                <pre>
+                EOH
+
+                apply_last_state=$(om -k \
+                    installations|head -4|tail -1)
+
+                echo "Here is the state $apply_last_state"
+
+                printf "<h2><font face=Arial>Apply change result:</font></h2>$apply_last_state" \
+                >> email/body.html
+
+                printf "</table></body></html>" >> email/body.html
+
+                printf "${ENV} ${status} Last Apply"> email/subject.txt
+            }
+            export OM_TARGET="https://${OPSMAN_DOMAIN_OR_IP_ADDRESS}"
+            export OM_CLIENT_ID="${OPSMAN_CLIENT_ID}"
+            export OM_CLIENT_SECRET="${OPSMAN_PASSWORD}"
+
+            echo "Applying changes on Ops Manager @ ${OPSMAN_DOMAIN_OR_IP_ADDRESS}"
+            {
+            om -k \
+            apply-changes \
+            --ignore-warnings && send_dat_email "COMPLETED"
+            } || {
+                send_dat_email "FAILED"
+            }
+
+    on_success:
+      put: send-an-email
+      params:
+        headers: email/headers.txt
+        subject: email/subject.txt
+        body: email/body.html
+    on_failure:
+      put: send-an-email
+      params:
+        headers: email/headers.txt
+        subject: email/subject.txt
+        body: email/body.html

@@ -1,2 +1,2 @@
 # pcf-patch
-Concourse pipeline to update patch level versions for Pivotal Cloud Foundry
+Very simple Concourse pipeline to update patch level versions for Pivotal Cloud Foundry products

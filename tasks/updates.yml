@@ -1,0 +1,19 @@
+---
+platform: linux
+inputs:
+- name: pipeline_repo
+params:
+  PRODUCT:
+  PRODUCT_VERSION:
+  OPSMAN_DOMAIN_OR_IP_ADDRESS:
+  OPSMAN_CLIENT_ID:
+  OPSMAN_PASSWORD:
+  ENV:
+  PRODUCT_SLUG:
+
+image_resource:
+  type: docker-image
+  source:
+    repository: hashicorp/terraform
+run:
+  path: pipeline_repo/tasks/pcf-patch/updates.sh
