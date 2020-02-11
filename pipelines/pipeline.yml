@@ -319,7 +319,8 @@ jobs:
     trigger: true
   - get: pipeline_repo
   - get: pipeline_image
-  - task: pending-changes    image: pipeline_image
+  - task: pending-changes    
+    image: pipeline_image
     params:
       OPSMAN_DOMAIN_OR_IP_ADDRESS: ((foundation.opsman_url))
       OPSMAN_CLIENT_ID: ((secrets.opsman.client_id))
@@ -339,7 +340,7 @@ jobs:
             export OM_CLIENT_ID="${OPSMAN_CLIENT_ID}"
             export OM_CLIENT_SECRET="${OPSMAN_PASSWORD}"
             echo "Checking dem pending changes on Ops Manager @ ${OPSMAN_DOMAIN_OR_IP_ADDRESS}"
-            local pending_changes_count=$(om -k \
+            pending_changes_count=$(om -k \
             curl -path /api/v0/staged/pending_changes | jq -r '.[][] | select(.action | startswith("update","install")) | .guid' | sed -e 's/-[^\-]*$//' | uniq)
             if [[ $(expr length $pending_changes_count) -eq 0 ]]; then
                 echo "Detected 0 pending changes. No need to apply."
